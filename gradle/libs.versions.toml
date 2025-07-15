@@ -1,9 +1,9 @@
 [versions]
-android-compileSdk = "34"
-android-targetSdk = "34"
+android-compileSdk = "35"
+android-targetSdk = "35"
 android-minSdk = "21"
-agp = "8.5.1"
-kotlin = "2.0.0"
+agp = "8.7.0"
+kotlin = "2.0.21"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -17,7 +17,7 @@ compose-plugin = "1.6.11"
 androidx-activityCompose = "1.9.0"
 androidx-appcompat = "1.6.1"
 coroutines = "1.8.1"
-ktor = "3.0.0-beta-2"
+ktor = "3.0.0"
 moshi = "1.15.1"
 
 [libraries]
@@ -51,4 +51,4 @@ kotlinAllOpen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "kot
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.29.0" }
-ksp = { id ="com.google.devtools.ksp", version = "2.0.0-1.0.23" }
+ksp = { id ="com.google.devtools.ksp", version = "2.0.21-1.0.28" }

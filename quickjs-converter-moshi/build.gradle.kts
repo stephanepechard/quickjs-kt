@@ -16,7 +16,7 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 
     sourceSets {
@@ -45,10 +45,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 }
 
 dependencies {
-    ksp(libs.moshi.kotlin.codegen)
+    add("kspJvm", libs.moshi.kotlin.codegen)
+    add("kspAndroid", libs.moshi.kotlin.codegen)
 }
 
 disableUnsupportedPlatformTasks()

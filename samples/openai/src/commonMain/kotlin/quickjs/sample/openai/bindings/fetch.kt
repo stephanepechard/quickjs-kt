@@ -17,8 +17,7 @@ import io.ktor.http.HttpMethod
 import io.ktor.util.toMap
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.read
-import io.ktor.utils.io.readUntilDelimiter
-import io.ktor.utils.io.skipDelimiter
+import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -134,37 +133,31 @@ private suspend fun readStreamBody(
 ) {
     val contentType = response.headers["Content-Type"]
     if (contentType == "text/event-stream") {
-        val buffer = ByteBuffer.allocate(4096)
+        val buffer = ByteArray(4096)
+        val delimiter = "\n\n".encodeToByteArray()
+        var accumulator = ByteArray(0)
+
         while (true) {
-            buffer.clear()
-            val readCount = channel.readUntilDelimiter(sseDelimiter, buffer)
-            if (readCount < 0) {
+            val readCount = channel.readAvailable(buffer)
+            if (readCount <= 0) {
+                if (accumulator.isNotEmpty()) {
+                    externalChannel.send(accumulator)
+                }
                 externalChannel.send(null)
                 break
-            } else if (readCount > 0) {
-                var hasDelimiter = false
-                try {
-                    channel.skipDelimiter(sseDelimiter)
-                    hasDelimiter = true
-                } catch (e: Throwable) {
-                    // No delimiter to skip
-                }
-                val sseDelimiterArray = sseDelimiter.array()
-                val extraSize = if (hasDelimiter) sseDelimiterArray.size else 0
-                val bytes = ByteArray(readCount + extraSize)
-                buffer.position(0)
-                buffer.get(bytes, 0, readCount)
-                if (hasDelimiter) {
-                    System.arraycopy(
-                        sseDelimiterArray, 0, // src
-                        bytes, readCount, // dst
-                        sseDelimiterArray.size // count
-                    )
-                }
-                externalChannel.send(bytes)
-            } else {
-                externalChannel.send(null)
-                break
+            }
+
+            accumulator += buffer.sliceArray(0 until readCount)
+
+            // Look for delimiter in accumulator
+            val delimiterIndex = accumulator.indexOfSubArray(delimiter)
+            if (delimiterIndex >= 0) {
+                // Found delimiter, send the chunk before it
+                val chunk = accumulator.sliceArray(0 until delimiterIndex + delimiter.size)
+                externalChannel.send(chunk)
+
+                // Keep the remaining data for next iteration
+                accumulator = accumulator.sliceArray(delimiterIndex + delimiter.size until accumulator.size)
             }
         }
     } else {
@@ -185,6 +178,24 @@ private suspend fun readStreamBody(
         }
     }
     externalChannel.close()
+}
+
+// Helper function to find subarray index
+private fun ByteArray.indexOfSubArray(subArray: ByteArray): Int {
+    if (subArray.isEmpty()) return 0
+    if (this.size < subArray.size) return -1
+
+    for (i in 0..this.size - subArray.size) {
+        var found = true
+        for (j in subArray.indices) {
+            if (this[i + j] != subArray[j]) {
+                found = false
+                break
+            }
+        }
+        if (found) return i
+    }
+    return -1
 }
 
 private data class Request(

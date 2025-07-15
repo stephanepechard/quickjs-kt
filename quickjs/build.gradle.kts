@@ -27,7 +27,7 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 
     sourceSets {
@@ -51,7 +51,6 @@ kotlin {
         }
 
         val jvmTest by getting {
-            dependsOn(commonTest.get())
             kotlin.srcDir("src/jniTest/kotlin/")
         }
 
@@ -98,6 +97,7 @@ android {
                     "-DANDROID_TOOLCHAIN=clang",
                     "-DTARGET_PLATFORM=android",
                     "-DLIBRARY_TYPE=shared",
+                    "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
                 )
                 cFlags("-fstrict-aliasing")
             }
@@ -112,7 +112,7 @@ android {
         val release by getting {
             externalNativeBuild {
                 cmake {
-                    arguments("-DCMAKE_BUILD_TYPE=MinSizeRel")
+                    arguments("-DCMAKE_BUILD_TYPE=MinSizeRel", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON")
                     cFlags(
                         "-g0",
                         "-Os",
@@ -127,6 +127,7 @@ android {
         val debug by getting {
             externalNativeBuild {
                 cmake {
+                    arguments += listOf("-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON")
                     cFlags("-g", "-DDEBUG", "-DDUMP_LEAKS")
                 }
             }
@@ -137,6 +138,11 @@ android {
         cmake {
             path = cmakeFile
         }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
