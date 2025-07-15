@@ -158,4 +158,27 @@ afterEvaluate {
     tasks.named("testReleaseUnitTest").configure {
         enabled = false
     }
+
+    // use ./gradlew publishAllPublicationsToMavenRepository to publish all publications
+    publishing {
+        publications {
+            if (name.contains("jvm", ignoreCase = true)) {
+                create<MavenPublication>("mavenJava") {
+                    groupId = "io.github.dokar3"
+                    artifactId = "quickjs-kt"
+                    version = "1.0.0-alpha13-16kb"
+                    //from(components["java"])
+                }
+            }
+        }
+        repositories {
+            maven {
+                url = uri("https://da-android-965585009786.d.codeartifact.eu-west-3.amazonaws.com/maven/quickjs-kt/")
+                credentials {
+                    username = "aws"
+                    password = System.env.CODEARTIFACT_AUTH_TOKEN
+                }
+            }
+        }
+    }
 }
